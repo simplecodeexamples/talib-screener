@@ -2,14 +2,22 @@ package org.biswa.ta.pojo;
 
 import java.util.Date;
 
-public class EmaObject {
+public class EmaObject extends IndicatorObject {
+	
+	
 	private Date createDate;
-	private double period;
 	private  double value;
 	private String type;
 	private int index;
 	
+	public EmaObject(TECHNICAL_INDICATOR ema, int period2, String vector2) {
+		super(ema, period2, vector2);
+	}
 	
+	public EmaObject() {
+		// TODO Auto-generated constructor stub
+	}
+
 	public int getIndex() {
 		return index;
 	}
@@ -21,12 +29,6 @@ public class EmaObject {
 	}
 	public void setCreateDate(Date createDate) {
 		this.createDate = createDate;
-	}
-	public double getPeriod() {
-		return period;
-	}
-	public void setPeriod(double period) {
-		this.period = period;
 	}
 	public double getValue() {
 		return value;

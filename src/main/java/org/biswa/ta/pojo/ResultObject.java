@@ -1,5 +1,7 @@
 package org.biswa.ta.pojo;
 
+import java.util.List;
+
 public class ResultObject {
 
 	private double buyPrice;
@@ -11,7 +13,29 @@ public class ResultObject {
 	private double totalLoss;
 	private int totalNumWin;
 	private int totalNumLoss;
+	private double largestProfit;
+	private double largestLoss;
 	
+	public double getLargestProfit() {
+		return largestProfit;
+	}
+	public void setLargestProfit(double largestProfit) {
+		this.largestProfit = largestProfit;
+	}
+	public double getLargestLoss() {
+		return largestLoss;
+	}
+	public void setLargestLoss(double largestLoss) {
+		this.largestLoss = largestLoss;
+	}
+	private List<TradeObject> trades;
+	
+	public List<TradeObject> getTrades() {
+		return trades;
+	}
+	public void setTrades(List<TradeObject> trades) {
+		this.trades = trades;
+	}
 	public double getProfit() {
 		return profit;
 	}

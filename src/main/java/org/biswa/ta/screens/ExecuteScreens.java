@@ -6,6 +6,10 @@ import java.util.List;
 
 import org.biswa.ta.pojo.BackTestObject;
 import org.biswa.ta.pojo.EmaObject;
+import org.biswa.ta.pojo.ExpressionObject;
+import org.biswa.ta.pojo.IndicatorObject;
+import org.biswa.ta.pojo.MacdObject;
+import org.biswa.ta.util.EnumHolders.Macd;
 
 import com.tictactec.ta.lib.Core;
 import com.tictactec.ta.lib.MAType;
@@ -53,37 +57,298 @@ public class ExecuteScreens {
 			107.000000, 109.190000, 110.000000, 109.200000, 110.120000, 108.000000, 108.620000, 109.750000, 109.810000,
 			109.000000, 108.750000, 107.870000 };
 
-	public List<BackTestObject> findEmaCrossOver(int shortPeriod, int longPeriod) {
-		System.out.println("EMA "+shortPeriod);
-		for (EmaObject ema : getEma(shortPeriod, MAType.Ema, close)) {
-			System.out.println(ema.getIndex() + "\t" + ema.getValue());
+	private List<ExpressionObject> expressionObjects;
+
+	private List<ExpressionObject> entryLongExpressionObjects;
+	private List<ExpressionObject> exitLongExpressionObjects;
+
+	private List<ExpressionObject> entryShortExpressionObjects;
+	private List<ExpressionObject> exitShortExpressionObjects;
+
+	public ExecuteScreens(List<ExpressionObject> expressionObjects) {
+		this.expressionObjects = expressionObjects;
+	}
+
+	public ExecuteScreens(List<ExpressionObject> entryLongExpressionObjects,
+			List<ExpressionObject> exitLongExpressionObjects, List<ExpressionObject> entryShortExpressionObjects,
+			List<ExpressionObject> exitShortExpressionObjects) {
+		this.entryLongExpressionObjects = entryLongExpressionObjects;
+		this.exitLongExpressionObjects = exitLongExpressionObjects;
+		this.entryShortExpressionObjects = entryShortExpressionObjects;
+		this.exitShortExpressionObjects = exitShortExpressionObjects;
+	}
+
+	public List<ExpressionObject> getEntryLongExpressionObjects() {
+		return entryLongExpressionObjects;
+	}
+
+	public void setEntryLongExpressionObjects(List<ExpressionObject> entryLongExpressionObjects) {
+		this.entryLongExpressionObjects = entryLongExpressionObjects;
+	}
+
+	public List<ExpressionObject> getExitLongExpressionObjects() {
+		return exitLongExpressionObjects;
+	}
+
+	public void setExitLongExpressionObjects(List<ExpressionObject> exitLongExpressionObjects) {
+		this.exitLongExpressionObjects = exitLongExpressionObjects;
+	}
+
+	public List<ExpressionObject> getEntryShortExpressionObjects() {
+		return entryShortExpressionObjects;
+	}
+
+	public void setEntryShortExpressionObjects(List<ExpressionObject> entryShortExpressionObjects) {
+		this.entryShortExpressionObjects = entryShortExpressionObjects;
+	}
+
+	public List<ExpressionObject> getExitShortExpressionObjects() {
+		return exitShortExpressionObjects;
+	}
+
+	public void setExitShortExpressionObjects(List<ExpressionObject> exitShortExpressionObjects) {
+		this.exitShortExpressionObjects = exitShortExpressionObjects;
+	}
+
+	Boolean positive = null;
+
+	public List<BackTestObject> getBackTestResults() {
+		// generate backtest results
+		List<BackTestObject> backTests = new ArrayList<BackTestObject>();
+		// decide begin index based on the max period among all expressions
+		int maxPeriod = entryLongExpressionObjects.get(0).getLeftExpression().getPeriod();
+
+		/** Evaluate maxperiod and indicators for entrylong **/
+		for (ExpressionObject expressionObject : entryLongExpressionObjects) {
+			if (expressionObject.getLeftExpression() != null
+					&& maxPeriod < expressionObject.getLeftExpression().getPeriod()) {
+				maxPeriod = expressionObject.getLeftExpression().getPeriod();
+			}
+			if (expressionObject.getRightExpression() != null
+					&& maxPeriod < expressionObject.getRightExpression().getPeriod()) {
+				maxPeriod = expressionObject.getRightExpression().getPeriod();
+			}
 		}
-		System.out.println("EMA "+longPeriod);
-		for (EmaObject ema : getEma(longPeriod, MAType.Ema, close)) {
-			System.out.println(ema.getIndex() + "\t" + ema.getValue());
+		// compute indicator values
+		for (ExpressionObject expressionObject : entryLongExpressionObjects) {
+			if (expressionObject.getLeftExpression() != null) {
+				expressionObject.setLeftIndicatorValues(computeIndicatorValues(expressionObject.getLeftExpression()));
+			}
+			if (expressionObject.getRightExpression() != null) {
+				expressionObject.setRightIndicatorValues(computeIndicatorValues(expressionObject.getRightExpression()));
+			}
 		}
-		List<EmaObject> shortEmas = getEma(shortPeriod, MAType.Ema, close);
-		List<EmaObject> longEmas = getEma(longPeriod, MAType.Ema, close);
-		List<BackTestObject> emaCrossOvers = new ArrayList<BackTestObject>();
+		/** end of Evaluate maxperiod and indicators for entrylong **/
+
+		/** Evaluate maxperiod and indicators for exitlong **/
+		for (ExpressionObject expressionObject : exitLongExpressionObjects) {
+			if (expressionObject.getLeftExpression() != null
+					&& maxPeriod < expressionObject.getLeftExpression().getPeriod()) {
+				maxPeriod = expressionObject.getLeftExpression().getPeriod();
+			}
+			if (expressionObject.getRightExpression() != null
+					&& maxPeriod < expressionObject.getRightExpression().getPeriod()) {
+				maxPeriod = expressionObject.getRightExpression().getPeriod();
+			}
+		}
+		// compute indicator values
+		for (ExpressionObject expressionObject : exitLongExpressionObjects) {
+			if (expressionObject.getLeftExpression() != null) {
+				expressionObject.setLeftIndicatorValues(computeIndicatorValues(expressionObject.getLeftExpression()));
+			}
+			if (expressionObject.getRightExpression() != null) {
+				expressionObject.setRightIndicatorValues(computeIndicatorValues(expressionObject.getRightExpression()));
+			}
+		}
+		/** end of Evaluate maxperiod and indicators for exitlong **/
+
+		for (int i = maxPeriod - 1; i < close.length - 2; i++) {
+			BackTestObject backTestObject = new BackTestObject();
+			if ((validateAllExpressions(exitLongExpressionObjects, i)) && (positive == null || positive)) {
+				backTestObject.setIndex(i);
+				backTestObject.setEventType("Negetive");
+				backTestObject.setPrice(close[i]);
+				backTests.add(backTestObject);
+				positive = false;
+			}
+			if ((validateAllExpressions(entryLongExpressionObjects, i)) && (positive == null || !positive)) {
+				backTestObject.setIndex(i);
+				backTestObject.setEventType("Positive");
+				backTestObject.setPrice(close[i]);
+				backTests.add(backTestObject);
+				positive = true;
+			}
+
+		}
+		return backTests;
+	}
+
+	private boolean validateAllExpressions(List<ExpressionObject> expressionObjects, int index) {
+		System.out.println("Index " + index);
+		boolean meetAllExpressions = true;
+		for (ExpressionObject expressionObject : expressionObjects) {
+			switch (expressionObject.getExpression()) {
+			case GREATER_THEN:
+				if (expressionObject.getLeftExpression() != null && expressionObject.getRightExpression() != null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftIndicatorValues().get(index)
+							.getValue() > expressionObject.getRightIndicatorValues().get(index).getValue());
+				}
+				if (expressionObject.getLeftExpression() != null && expressionObject.getRightExpression() == null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftIndicatorValues().get(index)
+							.getValue() > expressionObject.getRightValue());
+				}
+				if (expressionObject.getLeftExpression() == null && expressionObject.getRightExpression() != null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftValue() > expressionObject
+							.getRightIndicatorValues().get(index).getValue());
+				}
+
+				break;
+			case LESS_THEN:
+				if (expressionObject.getLeftExpression() != null && expressionObject.getRightExpression() != null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftIndicatorValues().get(index)
+							.getValue() < expressionObject.getRightIndicatorValues().get(index).getValue());
+				}
+				if (expressionObject.getLeftExpression() != null && expressionObject.getRightExpression() == null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftIndicatorValues().get(index)
+							.getValue() < expressionObject.getRightValue());
+				}
+				if (expressionObject.getLeftExpression() == null && expressionObject.getRightExpression() != null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftValue() < expressionObject
+							.getRightIndicatorValues().get(index).getValue());
+				}
+				break;
+			case EQUAL:
+				if (expressionObject.getLeftExpression() != null && expressionObject.getRightExpression() != null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftIndicatorValues().get(index)
+							.getValue() == expressionObject.getRightIndicatorValues().get(index).getValue());
+				}
+				if (expressionObject.getLeftExpression() != null && expressionObject.getRightExpression() == null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftIndicatorValues().get(index)
+							.getValue() == expressionObject.getRightValue());
+				}
+				if (expressionObject.getLeftExpression() == null && expressionObject.getRightExpression() != null) {
+					meetAllExpressions = meetAllExpressions && (expressionObject.getLeftValue() == expressionObject
+							.getRightIndicatorValues().get(index).getValue());
+				}
+				break;
+			default:
+				break;
+			}
+
+		}
+		return meetAllExpressions;
+	}
+
+	private List<BackTestObject> generateBacktests(int longPeriod, List<IndicatorObject> shortIndicators,
+			List<IndicatorObject> longIndicators) {
+		List<BackTestObject> backTests = new ArrayList<BackTestObject>();
 		Boolean positive = null;
-		for (int i = longPeriod-1; i < longEmas.size(); i++) {
-			BackTestObject emaCrossOverObject = new BackTestObject();
-			if ((longEmas.get(i).getValue() > shortEmas.get(i).getValue()) && (positive==null || positive)) {
-				emaCrossOverObject.setIndex(i);
-				emaCrossOverObject.setEventType("Negetive");
-				emaCrossOverObject.setPrice(close[i]);
-				emaCrossOvers.add(emaCrossOverObject);
-				positive=false;
+		for (int i = longPeriod - 1; i < longIndicators.size(); i++) {
+			BackTestObject backTestObject = new BackTestObject();
+			if ((longIndicators.get(i).getValue() > shortIndicators.get(i).getValue())
+					&& (positive == null || positive)) {
+				backTestObject.setIndex(i);
+				backTestObject.setEventType("Negetive");
+				backTestObject.setPrice(close[i]);
+				backTests.add(backTestObject);
+				positive = false;
 			}
-			if ((longEmas.get(i).getValue() < shortEmas.get(i).getValue()) && (positive==null || !positive)) {
-				emaCrossOverObject.setIndex(i);
-				emaCrossOverObject.setEventType("Positive");
-				emaCrossOverObject.setPrice(close[i]);
-				emaCrossOvers.add(emaCrossOverObject);
-				positive=true;
+			if ((longIndicators.get(i).getValue() < shortIndicators.get(i).getValue())
+					&& (positive == null || !positive)) {
+				backTestObject.setIndex(i);
+				backTestObject.setEventType("Positive");
+				backTestObject.setPrice(close[i]);
+				backTests.add(backTestObject);
+				positive = true;
 			}
 		}
-		return emaCrossOvers;
+		return backTests;
+	}
+
+	private List<IndicatorObject> computeIndicatorValues(IndicatorObject indicatorObject) {
+
+		switch (indicatorObject.getName()) {
+		case EMA:
+			return computeEma(indicatorObject.getPeriod(), MAType.Ema, close);
+		case RSI:
+			return computeRsi(indicatorObject.getPeriod(), close);
+		case MACD:
+			MacdObject macdObject = null;
+			if (indicatorObject instanceof MacdObject) {
+				macdObject = (MacdObject) indicatorObject;
+			}
+			return computeMacd(macdObject.getShortPeriod(), macdObject.getLongPeriod(), macdObject.getSignalPeriod(),
+					close, Macd.MACD_HISTOGRAM);
+		case CLOSE:
+			return computeClose();
+		default:
+			break;
+		}
+
+		return null;
+
+	}
+
+	private List<IndicatorObject> computeClose() {
+		List<IndicatorObject> dataObjs = new ArrayList<IndicatorObject>();
+		for (int i = 0; i < close.length; i++) {
+			IndicatorObject dataObject = new IndicatorObject();
+			dataObject.setPeriod(1);
+			dataObject.setValue(close[i]);
+			dataObject.setIndex(i);
+			dataObjs.add(dataObject);
+		}
+		return dataObjs;
+	}
+
+	private List<IndicatorObject> computeRsi(int period, double[] data) {
+		setUp(data.length);
+		retCode = lib.rsi(0, data.length - 1, data, period, outBegIdx, outNbElement, output);
+		System.out.println("RSI " + period);
+		return reArrangeData(output, period, outBegIdx);
+	}
+
+	public List<IndicatorObject> computeEma(int emaperiod, MAType matype, double[] data) {
+		setUp(data.length);
+		retCode = lib.movingAverage(0, data.length - 1, data, emaperiod, matype, outBegIdx, outNbElement, output);
+		System.out.println("EMA " + emaperiod);
+		return reArrangeData(output, emaperiod, outBegIdx);
+	}
+
+	public List<IndicatorObject> computeMacd(int shortPeriod, int longPeriod, int signalPeriod, double[] data,
+			Macd macdOutput) {
+		setUp(data.length);
+		double macd[] = new double[close.length];
+		double signal[] = new double[close.length];
+		double hist[] = new double[close.length];
+		retCode = lib.macd(0, close.length - 1, close, shortPeriod, longPeriod, signalPeriod, outBegIdx, outNbElement,
+				macd, signal, hist);
+		switch (macdOutput) {
+		case MACD:
+			System.out.println("MACD " + shortPeriod + " " + longPeriod + " " + signalPeriod);
+			return reArrangeData(macd, longPeriod + signalPeriod, outBegIdx);
+		case MACD_SIGNAL:
+			System.out.println("MACD Signal " + shortPeriod + " " + longPeriod + " " + signalPeriod);
+			return reArrangeData(signal, longPeriod + signalPeriod, outBegIdx);
+		case MACD_HISTOGRAM:
+			System.out.println("MACD Histogram " + shortPeriod + " " + longPeriod + " " + signalPeriod);
+			return reArrangeData(hist, longPeriod + signalPeriod, outBegIdx);
+		default:
+			return null;
+		}
+	}
+
+	private List<IndicatorObject> reArrangeData(double[] data, int period, MInteger beginIndex) {
+		List<IndicatorObject> dataObjs = new ArrayList<IndicatorObject>();
+		for (int i = beginIndex.value + data.length - 1; i > beginIndex.value; i--) {
+			IndicatorObject dataObject = new IndicatorObject();
+			dataObject.setPeriod(period);
+			dataObject.setValue(data[i - beginIndex.value]);
+			dataObject.setIndex((beginIndex.value + data.length - 1) - i);
+			System.out.println(dataObject.getIndex() + "\t" + dataObject.getValue());
+			dataObjs.add(dataObject);
+		}
+		return dataObjs;
 	}
 
 	public List<EmaObject> getEma(int emaperiod, MAType matype, double[] data) {
@@ -126,92 +391,6 @@ public class ExecuteScreens {
 		outputInt = new int[length];
 		outBegIdx = new MInteger();
 		outNbElement = new MInteger();
-	}
-
-	protected void setUp() {
-		for (int i = 0; i < input.length; i++) {
-			input[i] = (double) i;
-			inputInt[i] = i;
-		}
-		for (int i = 0; i < output.length; i++) {
-			output[i] = (double) -999999.0;
-			outputInt[i] = -999999;
-		}
-		outBegIdx.value = -1;
-		outNbElement.value = -1;
-		retCode = RetCode.InternalError;
-		lookback = -1;
-	}
-
-	public void testMFI() {
-		lookback = lib.mfiLookback(2);
-		retCode = lib.mfi(0, input.length - 1, input, input, input, input, 2, outBegIdx, outNbElement, output);
-	}
-
-	public void testHT() {
-		lookback = lib.htTrendModeLookback();
-		retCode = lib.htTrendMode(0, input.length - 1, input, outBegIdx, outNbElement, outputInt);
-	}
-
-	public void testMA_MAMA() {
-		lookback = lib.movingAverageLookback(10, MAType.Mama);
-		retCode = lib.movingAverage(0, input.length - 1, input, 10, MAType.Mama, outBegIdx, outNbElement, output);
-	}
-
-	public void testMA_SMA() {
-		lookback = lib.movingAverageLookback(10, MAType.Sma);
-		retCode = lib.movingAverage(0, input.length - 1, input, 10, MAType.Sma, outBegIdx, outNbElement, output);
-	}
-
-	public void testCMO() {
-		lookback = lib.cmoLookback(10);
-		retCode = lib.cmo(0, input.length - 1, input, 10, outBegIdx, outNbElement, output);
-	}
-
-	public void testSimpleCall() {
-
-		// Create Input/Output arrays.
-		input[0] = 2.0;
-		input[1] = 1.2;
-		input[2] = 1.5;
-
-		// Do the TA function call
-		retCode = lib.max(0, 2, input, 2, outBegIdx, outNbElement, output);
-
-		lookback = lib.maxLookback(2);
-	}
-
-	public final static double FLT_EPSILON = 1.192092896e-07;
-	public final static double TA_REAL_MIN = (-3e+37);
-
-	public void testCMO2() {
-		// initialize inputRandFltEpsilon
-		double[] inputRandFltEpsilon = new double[100];
-		for (int i = 0; i < inputRandFltEpsilon.length; i++) {
-			int sign = ((int) Math.random()) % 2;
-			double data = (sign != 0 ? 1.0 : -1.0) * (FLT_EPSILON);
-			inputRandFltEpsilon[i] = data;
-		}
-		// set default integer input option
-		int optInTimePeriod = Integer.MIN_VALUE;
-
-		// set output buffer
-		double[] output = new double[100];
-		Arrays.fill(output, TA_REAL_MIN);
-
-		MInteger outBegIdx = new MInteger();
-		MInteger outNbElement = new MInteger();
-
-		int lookback = lib.cmoLookback(optInTimePeriod);
-		retCode = lib.cmo(0, inputRandFltEpsilon.length - 1, inputRandFltEpsilon, optInTimePeriod, outBegIdx,
-				outNbElement, output);
-		/*
-		 * System.out.println("outBegIdx="+outBegIdx.value+",outNbElement="+outNbElement
-		 * .value);
-		 * 
-		 * for(int i=0;i<output.length;i++) { System.out.println("["+i+"]="+output[i]);
-		 * }
-		 */
 	}
 
 }
