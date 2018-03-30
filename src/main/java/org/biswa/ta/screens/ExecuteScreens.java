@@ -278,6 +278,20 @@ public class ExecuteScreens {
 				macdObject = (MacdObject) indicatorObject;
 			}
 			return computeMacd(macdObject.getShortPeriod(), macdObject.getLongPeriod(), macdObject.getSignalPeriod(),
+					close, Macd.MACD);
+		case MACD_SIGNAL:
+			MacdObject macdSignalObject = null;
+			if (indicatorObject instanceof MacdObject) {
+				macdSignalObject = (MacdObject) indicatorObject;
+			}
+			return computeMacd(macdSignalObject.getShortPeriod(), macdSignalObject.getLongPeriod(), macdSignalObject.getSignalPeriod(),
+					close, Macd.MACD_SIGNAL);
+		case MACD_HISTOGRAM:
+			MacdObject macdHistoGram = null;
+			if (indicatorObject instanceof MacdObject) {
+				macdHistoGram = (MacdObject) indicatorObject;
+			}
+			return computeMacd(macdHistoGram.getShortPeriod(), macdHistoGram.getLongPeriod(), macdHistoGram.getSignalPeriod(),
 					close, Macd.MACD_HISTOGRAM);
 		case CLOSE:
 			return computeClose();

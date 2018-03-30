@@ -5,7 +5,7 @@ import java.util.Date;
 public class IndicatorObject {
 	
 	public enum TECHNICAL_INDICATOR{
-		CLOSE,OPEN,HIGH,LOW,EMA,SMA,RSI,MACD,MACD_SIGNAL,CCI;
+		CLOSE,OPEN,HIGH,LOW,EMA,SMA,RSI,MACD,MACD_SIGNAL,MACD_HISTOGRAM,CCI;
 	}
 	
 	private TECHNICAL_INDICATOR name;

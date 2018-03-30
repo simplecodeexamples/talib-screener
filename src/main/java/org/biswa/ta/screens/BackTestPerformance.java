@@ -31,7 +31,7 @@ public class BackTestPerformance {
 
 	public ResultObject computePerformance(List<BackTestObject> backTestObjects) {
 		ResultObject resultObject = new ResultObject();
-		List<TradeObject> tradeObjects=new ArrayList<TradeObject>();
+		List<TradeObject> tradeObjects = new ArrayList<TradeObject>();
 		int profitCount = 0;
 		int lossCount = 0;
 		double profitAmount = 0.0;
@@ -40,17 +40,17 @@ public class BackTestPerformance {
 		int quantity = 0;
 		TradeObject tradeObject = null;
 		for (BackTestObject backTestObject : backTestObjects) {
-			
+
 			if (backTestObject.getEventType() == "Positive") {
-				tradeObject=new TradeObject();
+				tradeObject = new TradeObject();
 				buyPrice = backTestObject.getPrice();
-				quantity = (int) (perLotRisk / ((double)(buyPrice * stoplossPercent) / 100));
+				quantity = (int) (perLotRisk / ((double) (buyPrice * stoplossPercent) / 100));
 				averageBuy += buyPrice * quantity;
 				tradeObject.setBuyIndex(backTestObject.getIndex());
 				tradeObject.setBuyPrice(buyPrice);
 				tradeObject.setBuyQuantity(quantity);
 			}
-			if (backTestObject.getEventType() == "Negetive" && tradeObject!=null) {
+			if (backTestObject.getEventType() == "Negetive" && tradeObject != null) {
 				if (backTestObject.getPrice() > buyPrice) {
 					profitCount++;
 				} else {
@@ -59,9 +59,10 @@ public class BackTestPerformance {
 				tradeObject.setSellIndex(backTestObject.getIndex());
 				tradeObject.setSellPrice(backTestObject.getPrice());
 				tradeObject.setSellQuantity(quantity);
-				profitAmount += (quantity*backTestObject.getPrice() - buyPrice*quantity);
-				tradeObject.setProfit(quantity*backTestObject.getPrice() - buyPrice*quantity);
-				tradeObject.setProfitPercent((((quantity*backTestObject.getPrice() - buyPrice*quantity)*100)/(buyPrice*quantity)));
+				profitAmount += (quantity * backTestObject.getPrice() - buyPrice * quantity);
+				tradeObject.setProfit(quantity * backTestObject.getPrice() - buyPrice * quantity);
+				tradeObject.setProfitPercent(
+						(((quantity * backTestObject.getPrice() - buyPrice * quantity) * 100) / (buyPrice * quantity)));
 				tradeObjects.add(tradeObject);
 			}
 		}
@@ -71,9 +72,13 @@ public class BackTestPerformance {
 		resultObject.setTotalNumLoss(lossCount);
 		resultObject.setProfit(profitAmount);
 		resultObject.setProfitPercent((double) profitAmount * 100 / averageBuy);
-		resultObject.setLargestProfit(tradeObjects.stream().max(Comparator.comparing(TradeObject::getProfit)).get().getProfit());
-		resultObject.setLargestLoss(tradeObjects.stream().min(Comparator.comparing(TradeObject::getProfit)).get().getProfit());
-		resultObject.setTrades(tradeObjects);
+		if (tradeObjects.size() > 0) {
+			resultObject.setLargestProfit(
+					tradeObjects.stream().max(Comparator.comparing(TradeObject::getProfit)).get().getProfit());
+			resultObject.setLargestLoss(
+					tradeObjects.stream().min(Comparator.comparing(TradeObject::getProfit)).get().getProfit());
+			resultObject.setTrades(tradeObjects);
+		}
 		return resultObject;
 	}
 }

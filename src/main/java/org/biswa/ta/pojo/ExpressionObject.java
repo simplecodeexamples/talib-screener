@@ -2,22 +2,11 @@ package org.biswa.ta.pojo;
 
 import java.util.List;
 
+import org.biswa.ta.util.EnumHolders.Expression;
+
 public class ExpressionObject {
 
-	public enum Expression {
-		GREATER_THEN(">"), LESS_THEN("<"), EQUAL("=");
-		private String expressionVal;
-
-		Expression(String expressionVal) {
-			this.expressionVal = expressionVal;
-		}
-
-		public String getExpressionVal() {
-			return expressionVal;
-		}
-
-	}
-
+	
 	private IndicatorObject leftExpression;
 	private IndicatorObject rightExpression;
 	
@@ -39,6 +28,12 @@ public class ExpressionObject {
 	}
 	
 	
+
+	public ExpressionObject() {
+		// TODO Auto-generated constructor stub
+	}
+
+
 
 	public double getLeftValue() {
 		return leftValue;
