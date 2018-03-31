@@ -1,6 +1,11 @@
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.DataSource;
+
+import org.biswa.ta.dao.BacktestDao;
+import org.biswa.ta.dao.impl.BacktestDaoImpl;
 import org.biswa.ta.pojo.BackTestObject;
 import org.biswa.ta.pojo.BacktestExpressionsObject;
 import org.biswa.ta.pojo.ExpressionObject;
@@ -14,10 +19,30 @@ import org.biswa.ta.screens.BackTestPerformance;
 import org.biswa.ta.screens.ExecuteScreens;
 import org.biswa.ta.screens.formula.FormulaParser;
 import org.biswa.ta.util.EnumHolders.Expression;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 
+@Configuration
+@ComponentScan
 public class MainClass {
 
-	public static void main(String[] args) {
+	@Bean
+	public DataSource dataSource() {
+		  return DataSourceBuilder
+		        .create()
+		        .username("root")
+		        .password("")
+		        .url("jdbc:mysql://localhost:3306/camunda")
+		        .driverClassName("com.mysql.jdbc.Driver")
+		        .build();
+	}
+
+	public static void main(String[] args) throws SQLException {
 		List<ExpressionObject> entryLongExpressionObjects = new ArrayList<ExpressionObject>();
 		List<ExpressionObject> exitLongExpressionObjects = new ArrayList<ExpressionObject>();
 
@@ -76,8 +101,8 @@ public class MainClass {
 
 		// expressionObjects.add(expressionObject2);
 		FormulaObject formulaObject = new FormulaObject();
-		//formulaObject.setEntryLongFormula("EMA(5) > EMA(20) AND RSI(14) > 75");
-		//formulaObject.setExitLongFormula("EMA(5) < EMA(20)");
+		// formulaObject.setEntryLongFormula("EMA(5) > EMA(20) AND RSI(14) > 75");
+		// formulaObject.setExitLongFormula("EMA(5) < EMA(20)");
 
 		formulaObject.setEntryLongFormula("MACD_HISTOGRAM(12,26,9) > 0");
 		formulaObject.setExitLongFormula("MACD_HISTOGRAM(12,26,9) < 0");
@@ -92,6 +117,9 @@ public class MainClass {
 		backTestPerformance.setPerLotRisk(75);
 		backTestPerformance.setStoplossPercent(1);
 		ResultObject resultObject = backTestPerformance.computePerformance(backTestObjects);
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MainClass.class);
+		BacktestDao backtestDao = context.getBean(BacktestDaoImpl.class);
+		backtestDao.saveBackTestResult(resultObject, 1);
 		System.out.println(
 				"Buy Index\tBuy Price\tBuy Quantity\tSell Index\tSell Price\tSell Quantity\tProfit\tProfit Percent");
 		if (resultObject.getTrades() == null) {

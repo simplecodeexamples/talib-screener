@@ -2,10 +2,20 @@ package org.biswa.ta.pojo;
 
 public class FormulaObject {
 
+	private int formulaId;
 	private String entryLongFormula;
 	private String exitLongFormula;
 	private String entryShortFormula;
 	private String exitShortFormula;
+
+	
+	public int getFormulaId() {
+		return formulaId;
+	}
+
+	public void setFormulaId(int formulaId) {
+		this.formulaId = formulaId;
+	}
 
 	public String getEntryLongFormula() {
 		return entryLongFormula;
