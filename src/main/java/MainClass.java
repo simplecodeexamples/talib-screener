@@ -109,8 +109,9 @@ public class MainClass {
 		FormulaParser formulaParser = new FormulaParser();
 		BacktestExpressionsObject backtestExpressionsObject = formulaParser.generateBackTestExpressions(formulaObject);
 
+		double[] close = null;
 		ExecuteScreens executeScreens = new ExecuteScreens(backtestExpressionsObject.getEntryLongExpressionObject(),
-				backtestExpressionsObject.getExitLongExpressionObject(), null, null);
+				backtestExpressionsObject.getExitLongExpressionObject(), null, null,close);
 		List<BackTestObject> backTestObjects = executeScreens.getBackTestResults();
 
 		BackTestPerformance backTestPerformance = new BackTestPerformance();

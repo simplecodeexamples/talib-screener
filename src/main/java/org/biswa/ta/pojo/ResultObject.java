@@ -4,6 +4,8 @@ import java.util.List;
 
 public class ResultObject {
 
+	private String stockName;
+	private String stockSymbol;
 	private double buyPrice;
 	private double sellPrice;
 	private int totalNumberOfTrades;
@@ -15,7 +17,21 @@ public class ResultObject {
 	private int totalNumLoss;
 	private double largestProfit;
 	private double largestLoss;
+	private List<TradeObject> trades;	
 	
+	
+	public String getStockName() {
+		return stockName;
+	}
+	public void setStockName(String stockName) {
+		this.stockName = stockName;
+	}
+	public String getStockSymbol() {
+		return stockSymbol;
+	}
+	public void setStockSymbol(String stockSymbol) {
+		this.stockSymbol = stockSymbol;
+	}
 	public double getLargestProfit() {
 		return largestProfit;
 	}
@@ -28,7 +44,7 @@ public class ResultObject {
 	public void setLargestLoss(double largestLoss) {
 		this.largestLoss = largestLoss;
 	}
-	private List<TradeObject> trades;
+	
 	
 	public List<TradeObject> getTrades() {
 		return trades;

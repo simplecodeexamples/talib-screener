@@ -1,7 +1,10 @@
 package org.biswa.ta.pojo;
 
+import java.util.Date;
+
 public class TradeObject {
 	
+	private Date executionDate;
 	private int buyIndex;
 	private double buyPrice;
 	private int buyQuantity;
@@ -10,6 +13,14 @@ public class TradeObject {
 	private int sellQuantity;
 	private double profit;
 	private double profitPercent;
+	
+	
+	public Date getExecutionDate() {
+		return executionDate;
+	}
+	public void setExecutionDate(Date executionDate) {
+		this.executionDate = executionDate;
+	}
 	public int getBuyIndex() {
 		return buyIndex;
 	}

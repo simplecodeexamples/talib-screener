@@ -17,17 +17,13 @@ import com.tictactec.ta.lib.MInteger;
 import com.tictactec.ta.lib.RetCode;
 
 public class ExecuteScreens {
-	private double input[];
-	private int inputInt[];
 	private double output[];
-	private int outputInt[];
 	private MInteger outBegIdx;
 	private MInteger outNbElement;
 	private RetCode retCode;
 	private Core lib;
-	private int lookback;
 
-	static public double[] close = new double[] { 91.500000, 94.815000, 94.375000, 95.095000, 93.780000, 94.625000,
+	public double[] close = new double[] { 91.500000, 94.815000, 94.375000, 95.095000, 93.780000, 94.625000,
 			92.530000, 92.750000, 90.315000, 92.470000, 96.125000, 97.250000, 98.500000, 89.875000, 91.000000,
 			92.815000, 89.155000, 89.345000, 91.625000, 89.875000, 88.375000, 87.625000, 84.780000, 83.000000,
 			83.500000, 81.375000, 84.440000, 89.250000, 86.375000, 86.250000, 85.250000, 87.125000, 85.815000,
@@ -71,11 +67,20 @@ public class ExecuteScreens {
 
 	public ExecuteScreens(List<ExpressionObject> entryLongExpressionObjects,
 			List<ExpressionObject> exitLongExpressionObjects, List<ExpressionObject> entryShortExpressionObjects,
-			List<ExpressionObject> exitShortExpressionObjects) {
+			List<ExpressionObject> exitShortExpressionObjects, double[] close) {
 		this.entryLongExpressionObjects = entryLongExpressionObjects;
 		this.exitLongExpressionObjects = exitLongExpressionObjects;
 		this.entryShortExpressionObjects = entryShortExpressionObjects;
 		this.exitShortExpressionObjects = exitShortExpressionObjects;
+		this.close = close;
+	}
+
+	public  double[] getClose() {
+		return close;
+	}
+
+	public  void setClose(double[] close) {
+		this.close = close;
 	}
 
 	public List<ExpressionObject> getEntryLongExpressionObjects() {
@@ -284,15 +289,15 @@ public class ExecuteScreens {
 			if (indicatorObject instanceof MacdObject) {
 				macdSignalObject = (MacdObject) indicatorObject;
 			}
-			return computeMacd(macdSignalObject.getShortPeriod(), macdSignalObject.getLongPeriod(), macdSignalObject.getSignalPeriod(),
-					close, Macd.MACD_SIGNAL);
+			return computeMacd(macdSignalObject.getShortPeriod(), macdSignalObject.getLongPeriod(),
+					macdSignalObject.getSignalPeriod(), close, Macd.MACD_SIGNAL);
 		case MACD_HISTOGRAM:
 			MacdObject macdHistoGram = null;
 			if (indicatorObject instanceof MacdObject) {
 				macdHistoGram = (MacdObject) indicatorObject;
 			}
-			return computeMacd(macdHistoGram.getShortPeriod(), macdHistoGram.getLongPeriod(), macdHistoGram.getSignalPeriod(),
-					close, Macd.MACD_HISTOGRAM);
+			return computeMacd(macdHistoGram.getShortPeriod(), macdHistoGram.getLongPeriod(),
+					macdHistoGram.getSignalPeriod(), close, Macd.MACD_HISTOGRAM);
 		case CLOSE:
 			return computeClose();
 		default:
@@ -368,7 +373,6 @@ public class ExecuteScreens {
 	public List<EmaObject> getEma(int emaperiod, MAType matype, double[] data) {
 		List<EmaObject> emaObjs = new ArrayList<EmaObject>();
 		setUp(data.length);
-		lookback = lib.movingAverageLookback(emaperiod, matype);
 		retCode = lib.movingAverage(0, data.length - 1, data, emaperiod, matype, outBegIdx, outNbElement, output);
 		for (int i = outBegIdx.value + data.length - 1; i > outBegIdx.value; i--) {
 			EmaObject emaObject = new EmaObject();
@@ -380,29 +384,9 @@ public class ExecuteScreens {
 		return emaObjs;
 	}
 
-	public void test_MACD() {
-		double macd[] = new double[close.length];
-		double signal[] = new double[close.length];
-		double hist[] = new double[close.length];
-		lookback = lib.macdLookback(15, 26, 9);
-		retCode = lib.macd(0, close.length - 1, close, 15, 26, 9, outBegIdx, outNbElement, macd, signal, hist);
-
-		double ema15[] = new double[close.length];
-		lookback = lib.emaLookback(15);
-		retCode = lib.ema(0, close.length - 1, close, 15, outBegIdx, outNbElement, ema15);
-
-		double ema26[] = new double[close.length];
-		lookback = lib.emaLookback(26);
-		retCode = lib.ema(0, close.length - 1, close, 26, outBegIdx, outNbElement, ema26);
-
-		// TODO Add tests of outputs
-	}
-
 	public void setUp(int length) {
 		lib = new Core();
-		inputInt = new int[length];
 		output = new double[length];
-		outputInt = new int[length];
 		outBegIdx = new MInteger();
 		outNbElement = new MInteger();
 	}
